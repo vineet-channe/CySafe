@@ -11,7 +11,7 @@ const BASE_URL = 'http://10.10.61.225:5000/api/auth';
 
 const Profile = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editedName, setEditedName] = useState("Vineet Channe");
+  const [editedName, setEditedName] = useState("Enter Name");
   const [avatarSource, setAvatarSource] = useState('https://your-avatar-url.com');
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -132,167 +132,162 @@ const Profile = () => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <ScrollView style={styles.scrollView}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Profile</Text>
-            <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-              <Icon name="logout" size={24} color="#fff" />
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Profile</Text>
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+            <Icon name="logout" size={24} color="#1a237e" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.profileCard}>
+          <View style={styles.avatarContainer}>
+            {avatarSource === 'https://your-avatar-url.com' ? (
+              <InitialAvatar name={userData?.name} size={120} />
+            ) : (
+              <Image source={{ uri: avatarSource }} style={styles.avatar} />
+            )}
+            <TouchableOpacity 
+              style={styles.editAvatarButton}
+              onPress={() => setIsModalVisible(true)}
+            >
+              <Icon name="camera" size={20} color="#fff" />
             </TouchableOpacity>
           </View>
+          <Text style={styles.name}>{userData?.name}</Text>
+          <Text style={styles.username}>@{userData?.username}</Text>
+          
+          <TouchableOpacity 
+            style={styles.editButton}
+            onPress={() => setIsModalVisible(true)}
+          >
+            <Icon name="pencil" size={16} color="#1a237e" />
+            <Text style={styles.editButtonText}>Edit Profile</Text>
+          </TouchableOpacity>
+        </View>
 
-          <View style={styles.content}>
-            <View style={styles.profileCard}>
+        <View style={styles.statsContainer}>
+          <View style={styles.statRow}>
+            <View style={styles.statCard}>
+              <Icon name="bike" size={28} color="#1a237e" />
+              <Text style={styles.statValue}>{userData?.stats.numOfRides}</Text>
+              <Text style={styles.statLabel}>Total Rides</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Icon name="map-marker-distance" size={28} color="#1a237e" />
+              <Text style={styles.statValue}>{userData?.stats.totalKm}km</Text>
+              <Text style={styles.statLabel}>Distance</Text>
+            </View>
+          </View>
+          <View style={styles.statRow}>
+            <View style={styles.statCard}>
+              <Icon name="speedometer" size={28} color="#1a237e" />
+              <Text style={styles.statValue}>{userData?.stats.avgSpeed}km/h</Text>
+              <Text style={styles.statLabel}>Avg Speed</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Icon name="fire" size={28} color="#1a237e" />
+              <Text style={styles.statValue}>{userData?.stats.caloriesBurned}</Text>
+              <Text style={styles.statLabel}>Calories</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          {/* <Text style={styles.sectionTitle}>Account Info</Text> */}
+          <View style={styles.infoCard}>
+            <View style={styles.infoRow}>
+              {/* <Text style={styles.infoLabel}>Member Since</Text> */}
+              <Text style={styles.infoValue}>
+                {/* {formatDate(userData?.createdAt)} */}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+      <NavigationBar />
+
+      {/* Edit Profile Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isModalVisible}
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalView}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Profile</Text>
+              <TouchableOpacity 
+                onPress={() => setIsModalVisible(false)}
+                style={styles.closeButton}
+              >
+                <Icon name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity 
+              style={styles.imagePickerButton}
+              onPress={selectImage}
+            >
               {avatarSource === 'https://your-avatar-url.com' ? (
                 <InitialAvatar name={userData?.name} size={100} />
               ) : (
-                <Image source={{ uri: avatarSource }} style={styles.avatar} />
+                <Image
+                  source={{ uri: avatarSource }}
+                  style={styles.previewImage}
+                />
               )}
-              <Text style={styles.name}>{userData?.name}</Text>
-              <Text style={styles.username}>@{userData?.username}</Text>
-              
-              <TouchableOpacity 
-                style={styles.editButton}
-                onPress={() => setIsModalVisible(true)}
-              >
-                <Icon name="pencil" size={16} color="#fff" />
-                <Text style={styles.editButtonText}>Edit Profile</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.statsContainer}>
-              <View style={styles.statCard}>
-                <Icon name="bike" size={24} color="#1a237e" />
-                <Text style={styles.statValue}>{userData?.stats.numOfRides}</Text>
-                <Text style={styles.statLabel}>Total Rides</Text>
+              <View style={styles.imageOverlay}>
+                <Icon name="camera" size={24} color="#fff" />
+                <Text style={styles.imagePickerText}>Change Photo</Text>
               </View>
+            </TouchableOpacity>
 
-              <View style={styles.statCard}>
-                <Icon name="map-marker-distance" size={24} color="#1a237e" />
-                <Text style={styles.statValue}>{userData?.stats.totalKm}km</Text>
-                <Text style={styles.statLabel}>Distance</Text>
-              </View>
+            <Text style={styles.inputLabel}>Name</Text>
+            <TextInput
+              style={styles.input}
+              value={editedName}
+              onChangeText={setEditedName}
+              placeholder="Enter your name"
+              placeholderTextColor="#999"
+            />
 
-              <View style={styles.statCard}>
-                <Icon name="speedometer" size={24} color="#1a237e" />
-                <Text style={styles.statValue}>{userData?.stats.avgSpeed}km/h</Text>
-                <Text style={styles.statLabel}>Avg Speed</Text>
-              </View>
-
-              <View style={styles.statCard}>
-                <Icon name="fire" size={24} color="#1a237e" />
-                <Text style={styles.statValue}>{userData?.stats.caloriesBurned}</Text>
-                <Text style={styles.statLabel}>Calories</Text>
-              </View>
-            </View>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Account Info</Text>
-              <View style={styles.infoCard}>
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Member Since</Text>
-                  <Text style={styles.infoValue}>
-                    {formatDate(userData?.createdAt)}
-                  </Text>
-                </View>
-              </View>
-            </View>
+            <TouchableOpacity 
+              style={styles.saveButton}
+              onPress={handleSave}
+            >
+              <Text style={styles.saveButtonText}>Save Changes</Text>
+            </TouchableOpacity>
           </View>
-        </ScrollView>
-
-        {/* Edit Profile Modal */}
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={isModalVisible}
-          onRequestClose={() => setIsModalVisible(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalView}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Edit Profile</Text>
-                <TouchableOpacity 
-                  onPress={() => setIsModalVisible(false)}
-                  style={styles.closeButton}
-                >
-                  <Icon name="close" size={24} color="#666" />
-                </TouchableOpacity>
-              </View>
-
-              <TouchableOpacity 
-                style={styles.imagePickerButton}
-                onPress={selectImage}
-              >
-                {avatarSource === 'https://your-avatar-url.com' ? (
-                  <InitialAvatar name={userData?.name} />
-                ) : (
-                  <Image
-                    source={{ uri: avatarSource }}
-                    style={styles.previewImage}
-                  />
-                )}
-                <View style={styles.imageOverlay}>
-                  <Icon name="camera" size={24} color="#fff" />
-                  <Text style={styles.imagePickerText}>Change Photo</Text>
-                </View>
-              </TouchableOpacity>
-
-              <Text style={styles.inputLabel}>Name</Text>
-              <TextInput
-                style={styles.input}
-                value={editedName}
-                onChangeText={setEditedName}
-                placeholder="Enter your name"
-              />
-
-              <TouchableOpacity 
-                style={styles.saveButton}
-                onPress={handleSave}
-              >
-                <Text style={styles.saveButtonText}>Save Changes</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-
-        {/* Navigation bar fixed at bottom */}
-        <NavigationBar />
-      </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#1a237e',
-  },
   container: {
     flex: 1,
-    backgroundColor: '#1a237e',
+    backgroundColor: '#f5f5f5',
   },
   scrollView: {
     flex: 1,
-  },
-  content: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    paddingTop: 20,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    paddingBottom: 20,
+    padding: 20,
+    backgroundColor: '#E8EAF6',
+    borderBottomWidth: 1,
+    borderBottomColor: '#C5CAE9',
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#1a237e',
   },
   logoutButton: {
     padding: 8,
@@ -300,16 +295,38 @@ const styles = StyleSheet.create({
   profileCard: {
     alignItems: 'center',
     padding: 20,
+    paddingTop: 30,
+    backgroundColor: '#E8EAF6',
+    marginBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#C5CAE9',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
+  avatarContainer: {
+    position: 'relative',
     marginBottom: 16,
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 16,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+  },
+  editAvatarButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#1a237e',
+    padding: 8,
+    borderRadius: 20,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
   },
   name: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
     color: '#1a237e',
     marginBottom: 4,
@@ -317,78 +334,92 @@ const styles = StyleSheet.create({
   username: {
     fontSize: 16,
     color: '#666',
+    marginBottom: 16,
   },
   editButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(26, 35, 126, 0.9)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginTop: 16,
-  },
-  editButtonText: {
-    color: '#fff',
-    marginLeft: 8,
-    fontSize: 14,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: 16,
-    justifyContent: 'space-between',
-  },
-  statCard: {
-    width: '48%',
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: 16,
+    backgroundColor: '#f5f5f5',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 25,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
+  editButtonText: {
+    color: '#1a237e',
+    marginLeft: 8,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  statsContainer: {
+    padding: 16,
+  },
+  statRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  statCard: {
+    width: '48%',
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 16,
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
   statValue: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#1a237e',
-    marginTop: 8,
+    marginTop: 12,
   },
   statLabel: {
     fontSize: 14,
     color: '#666',
-    marginTop: 4,
+    marginTop: 8,
+    fontWeight: '500',
   },
   section: {
     padding: 16,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#1a237e',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   infoCard: {
     backgroundColor: '#fff',
-    borderRadius: 12,
     padding: 16,
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 8,
+    alignItems: 'center',
+    marginBottom: 8,
   },
   infoLabel: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#666',
   },
   infoValue: {
     fontSize: 16,
+    fontWeight: 'bold',
     color: '#1a237e',
-    fontWeight: '500',
   },
   modalOverlay: {
     flex: 1,
@@ -462,6 +493,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     fontSize: 16,
     marginBottom: 20,
+    color: '#000',
+    backgroundColor: '#fff',
   },
   saveButton: {
     backgroundColor: '#1a237e',
