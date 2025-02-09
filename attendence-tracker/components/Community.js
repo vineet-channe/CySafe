@@ -77,12 +77,44 @@ const CommunityPage = () => {
       await axios.post(`${BASE_URL}/posts`, newPost);
       setNewPost({ heading: '', description: '' });
       setIsModalVisible(false);
-      fetchPosts(); // Refresh posts after adding new one
+      fetchPosts();
     } catch (error) {
       console.error('Error creating post:', error);
       Alert.alert('Error', 'Failed to create post');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    try {
+      if (!dateString) return '';
+      
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      
+      const now = new Date();
+      const diff = now.getTime() - date.getTime();
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+
+      if (minutes < 60) {
+        return minutes <= 1 ? 'Just now' : `${minutes} minutes ago`;
+      } else if (hours < 24) {
+        return hours === 1 ? '1 hour ago' : `${hours} hours ago`;
+      } else if (days < 7) {
+        return days === 1 ? 'Yesterday' : `${days} days ago`;
+      } else {
+        return date.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        });
+      }
+    } catch (error) {
+      console.error('Date formatting error:', error);
+      return '';
     }
   };
 
@@ -171,9 +203,12 @@ const CommunityPage = () => {
                 <Text style={styles.postTitle}>{post.heading}</Text>
                 <Text style={styles.postDescription}>{post.description}</Text>
                 <View style={styles.postFooter}>
-                  <Text style={styles.timestamp}>
-                    {new Date(post.createdAt).toLocaleDateString()}
-                  </Text>
+                  <View style={styles.postMeta}>
+                    <Icon name="clock-outline" size={14} color="#666" />
+                    <Text style={styles.timestamp}>
+                      {formatDate(post.createdAt)}
+                    </Text>
+                  </View>
                 </View>
               </View>
             ))}
@@ -364,10 +399,17 @@ const styles = StyleSheet.create({
   postFooter: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  postMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   timestamp: {
     fontSize: 12,
     color: '#666',
+    marginLeft: 4,
   },
   modalOverlay: {
     flex: 1,
