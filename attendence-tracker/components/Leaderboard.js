@@ -1,108 +1,206 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import NavigationBar from './NavigationBar';
+import axios from 'axios';
+
+const BASE_URL = 'http://10.10.61.225:5000/api/auth';
+
+const InitialAvatar = ({ name, size = 40 }) => {
+  const getInitialLetter = (name) => {
+    return name ? name.charAt(0).toUpperCase() : '?';
+  };
+
+  const getRandomColor = (name) => {
+    const colors = [
+      '#1a237e', // Deep Blue
+      '#0D47A1', // Blue
+      '#1B5E20', // Green
+      '#B71C1C', // Red
+      '#4A148C', // Purple
+      '#004D40', // Teal
+      '#E65100', // Orange
+      '#263238', // Blue Grey
+    ];
+    
+    // Use name to consistently get same color for same user
+    const index = name ? name.length % colors.length : 0;
+    return colors[index];
+  };
+
+  return (
+    <View 
+      style={[
+        styles.initialAvatar, 
+        { 
+          width: size, 
+          height: size, 
+          borderRadius: size / 2,
+          backgroundColor: getRandomColor(name)
+        }
+      ]}
+    >
+      <Text style={[styles.initialText, { fontSize: size * 0.4 }]}>
+        {getInitialLetter(name)}
+      </Text>
+    </View>
+  );
+};
 
 const Leaderboard = () => {
   const [selectedFilter, setSelectedFilter] = useState('Worldwide');
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const filters = ['Hacks', '6Dimens', 'SPIT', 'India'];
-  const leaderboardData = [
-    {
-      id: 2,
-      rank: 2,
-      name: 'Krishna Sharma',
-      avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-      distance: 105
-    },
-    {
-      id: 1,
-      rank: 1,
-      name: 'Prasad Chopade',
-      avatar: 'https://randomuser.me/api/portraits/men/17.jpg',
-      distance: 146
-    },
-    {
-      id: 3,
-      rank: 3,
-      name: 'Vineet Channe',
-      avatar: 'https://randomuser.me/api/portraits/men/46.jpg',
-      distance: 99
-    },
-    {
-      id: 4,
-      rank: 4,
-      name: 'Paarth Bahety',
-      avatar: 'https://randomuser.me/api/portraits/women/67.jpg',
-      distance: 56
-    },
-    {
-      id: 5,
-      rank: 5,
-      name: 'Dhureen Shettigar',
-      avatar: 'https://randomuser.me/api/portraits/men/55.jpg',
-      distance: 46
-    },
-    {
-      id: 6,
-      rank: 6,
-      name: 'Lokesh Chaudhari',
-      avatar: 'https://randomuser.me/api/portraits/men/62.jpg',
-      distance: 35
+
+  useEffect(() => {
+    fetchLeaderboardData();
+  }, []);
+
+  const fetchLeaderboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('Fetching from:', `${BASE_URL}/leaderboard`);
+      
+      const response = await axios.get(`${BASE_URL}/leaderboard`);
+      console.log('Leaderboard response:', response.data);
+      
+      if (response.data && Array.isArray(response.data)) {
+        setLeaderboardData(response.data);
+      } else {
+        throw new Error('Invalid data format received');
+      }
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      setError(error.message);
+      Alert.alert(
+        'Error',
+        'Failed to load leaderboard data. Please try again later.'
+      );
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const TopThree = () => (
-    <View style={styles.podiumWrapper}>
-      {/* Podium Background */}
-      <View style={styles.podiumBackground}>
-        <View style={styles.podiumSecond} />
-        <View style={styles.podiumFirst} />
-        <View style={styles.podiumThird} />
+  const TopThree = () => {
+    if (!leaderboardData || leaderboardData.length === 0) {
+      return (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyStateText}>No data available</Text>
+        </View>
+      );
+    }
+
+    if (leaderboardData.length < 3) {
+      // Handle case with less than 3 users
+      return (
+        <View style={styles.podiumWrapper}>
+          {/* Show available users */}
+          <View style={styles.podiumContainer}>
+            {leaderboardData.map((user, index) => (
+              <View 
+                key={user.id} 
+                style={[
+                  styles.podiumItem,
+                  index === 0 && styles.firstPlace,
+                  index === 1 && styles.secondPlace,
+                  index === 2 && styles.thirdPlace
+                ]}
+              >
+                <View style={styles.rankBadge}>
+                  <Text style={styles.rankText}>{index + 1}</Text>
+                </View>
+                <InitialAvatar name={user.name} size={60} />
+                <Text style={styles.podiumName}>{user.name}</Text>
+                <View style={styles.distanceContainer}>
+                  <Icon name="map-marker-distance" size={16} color="#666" />
+                  <Text style={styles.distanceText}>{user.distance}km</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      );
+    }
+
+    // Original TopThree implementation for 3 or more users
+    return (
+      <View style={styles.podiumWrapper}>
+        {/* Podium Background */}
+        <View style={styles.podiumBackground}>
+          <View style={styles.podiumSecond} />
+          <View style={styles.podiumFirst} />
+          <View style={styles.podiumThird} />
+        </View>
+
+        <View style={styles.podiumContainer}>
+          {/* Second Place */}
+          <View style={[styles.podiumItem, styles.secondPlace]}>
+            <View style={styles.rankBadge}>
+              <Text style={styles.rankText}>2</Text>
+            </View>
+            <InitialAvatar name={leaderboardData[1].name} size={60} />
+            <Text style={styles.podiumName}>{leaderboardData[1].name}</Text>
+            <View style={styles.distanceContainer}>
+              <Icon name="map-marker-distance" size={16} color="#666" />
+              <Text style={styles.distanceText}>{leaderboardData[1].distance}km</Text>
+            </View>
+          </View>
+
+          {/* First Place */}
+          <View style={[styles.podiumItem, styles.firstPlace]}>
+            <View style={[styles.rankBadge, styles.firstBadge]}>
+              <Text style={styles.rankText}>1</Text>
+            </View>
+            <InitialAvatar name={leaderboardData[0].name} size={60} />
+            <Text style={styles.podiumName}>{leaderboardData[0].name}</Text>
+            <View style={styles.distanceContainer}>
+              <Icon name="map-marker-distance" size={16} color="#666" />
+              <Text style={styles.distanceText}>{leaderboardData[0].distance}km</Text>
+            </View>
+          </View>
+
+          {/* Third Place */}
+          <View style={[styles.podiumItem, styles.thirdPlace]}>
+            <View style={styles.rankBadge}>
+              <Text style={styles.rankText}>3</Text>
+            </View>
+            <InitialAvatar name={leaderboardData[2].name} size={60} />
+            <Text style={styles.podiumName}>{leaderboardData[2].name}</Text>
+            <View style={styles.distanceContainer}>
+              <Icon name="map-marker-distance" size={16} color="#666" />
+              <Text style={styles.distanceText}>{leaderboardData[2].distance}km</Text>
+            </View>
+          </View>
+        </View>
       </View>
+    );
+  };
 
-      <View style={styles.podiumContainer}>
-        {/* Second Place */}
-        <View style={[styles.podiumItem, styles.secondPlace]}>
-          <View style={styles.rankBadge}>
-            <Text style={styles.rankText}>2</Text>
-          </View>
-          <Image source={{ uri: leaderboardData[0].avatar }} style={styles.podiumAvatar} />
-          <Text style={styles.podiumName}>{leaderboardData[0].name}</Text>
-          <View style={styles.distanceContainer}>
-            <Icon name="bike" size={16} color="#666" />
-            <Text style={styles.distanceText}>{leaderboardData[0].distance}</Text>
-          </View>
-        </View>
-
-        {/* First Place */}
-        <View style={[styles.podiumItem, styles.firstPlace]}>
-          <View style={[styles.rankBadge, styles.firstBadge]}>
-            <Text style={styles.rankText}>1</Text>
-          </View>
-          <Image source={{ uri: leaderboardData[1].avatar }} style={[styles.podiumAvatar, styles.firstAvatar]} />
-          <Text style={styles.podiumName}>{leaderboardData[1].name}</Text>
-          <View style={styles.distanceContainer}>
-            <Icon name="bike" size={16} color="#666" />
-            <Text style={styles.distanceText}>{leaderboardData[1].distance}</Text>
-          </View>
-        </View>
-
-        {/* Third Place */}
-        <View style={[styles.podiumItem, styles.thirdPlace]}>
-          <View style={styles.rankBadge}>
-            <Text style={styles.rankText}>3</Text>
-          </View>
-          <Image source={{ uri: leaderboardData[2].avatar }} style={styles.podiumAvatar} />
-          <Text style={styles.podiumName}>{leaderboardData[2].name}</Text>
-          <View style={styles.distanceContainer}>
-            <Icon name="bike" size={16} color="#666" />
-            <Text style={styles.distanceText}>{leaderboardData[2].distance}</Text>
-          </View>
-        </View>
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#1a237e" />
       </View>
-    </View>
-  );
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Error loading leaderboard</Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={fetchLeaderboardData}
+        >
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -137,11 +235,13 @@ const Leaderboard = () => {
           {leaderboardData.slice(3).map((item) => (
             <View key={item.id} style={styles.listItem}>
               <Text style={styles.listRank}>{item.rank}</Text>
-              <Image source={{ uri: item.avatar }} style={styles.listAvatar} />
+              <View style={styles.avatarContainer}>
+                <InitialAvatar name={item.name} size={40} />
+              </View>
               <Text style={styles.listName}>{item.name}</Text>
               <View style={styles.listDistanceContainer}>
-                <Icon name="bike" size={14} color="#666" />
-                <Text style={styles.listDistanceText}>{item.distance} km</Text>
+                <Icon name="map-marker-distance" size={16} color="#666" />
+                <Text style={styles.listDistanceText}>{item.distance}km</Text>
               </View>
             </View>
           ))}
@@ -329,10 +429,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#666',
   },
-  listAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  avatarContainer: {
     marginRight: 12,
   },
   listName: {
@@ -348,6 +445,50 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     fontSize: 12,
     color: '#666',
+  },
+  initialAvatar: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  initialText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#666',
+  },
+  errorContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: '#1a237e',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
   },
 });
 

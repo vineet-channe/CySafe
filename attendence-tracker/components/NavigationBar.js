@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const NavigationBar = () => {
   const router = useRouter();
@@ -12,14 +13,14 @@ const NavigationBar = () => {
     {
       id: '1',
       title: 'Rides',
-      icon: 'directions-car',
+      icon: 'bike',
       route: '/subject-form'
     },
     {
       id: '2',
-      title: 'Profile',
-      icon: 'person',
-      route: '/profile'
+      title: 'Community',
+      icon: 'account-group',
+      route: '/community'
     },
     {
       id: 'home',
@@ -30,14 +31,14 @@ const NavigationBar = () => {
     {
       id: '3',
       title: 'Leaderboard',
-      icon: 'leaderboard',
+      icon: 'trophy',
       route: '/leaderboard'
     },
     {
       id: '4',
-      title: 'Settings',
-      icon: 'settings',
-      route: '/settings'
+      title: 'Profile',
+      icon: 'account',
+      route: '/profile'
     }
   ];
 
@@ -53,7 +54,7 @@ const NavigationBar = () => {
           ]}
           onPress={() => router.push(item.route)}
         >
-          <MaterialIcons 
+          <Icon 
             name={item.icon} 
             size={item.id === 'home' ? 32 : 24} 
             color={currentPath === item.route ? '#000' : '#666'} 
